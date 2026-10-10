@@ -1,0 +1,31 @@
+name: Auto sync fork from upstream
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/byJoey/cfnewup.git
+
+      - name: Fetch and merge upstream
+        run: |
+          git fetch upstream main
+          git checkout main || git checkout -b main
+          git merge upstream/main --allow-unrelated-histories --no-edit
+
+      - name: Push back to fork
+        run: |
+          git remote set-url origin https://github.com/${{ github.repository }}.git
+          git push origin main
